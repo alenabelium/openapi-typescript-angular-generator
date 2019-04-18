@@ -1,3 +1,6 @@
+{{! Copyright(c) 2009 - 2019 Abelium d.o.o. }}
+{{! Kajuhova 90, 1000 Ljubljana, Slovenia }}
+{{! All rights reserved. }}
 {{! Copyright(c) 1995 - 2018 T-Systems Multimedia Solutions GmbH }}
 {{! Riesaer Str. 5, 01129 Dresden }}
 {{! All rights reserved. }}
@@ -31,25 +34,21 @@
     {{/vars}}
     };
 
-    /**
-    * The FormControlFactory for {{classname}}.
-    */
-    export class FormControlFactory extends BaseFormControlFactory<{{classname}}> {
-
-        /**
-         * Constructor.
-         *
-         * @param model An existing model for {{classname}}.
-         *              If given, all form-controls of the factory automatically have the value of this model. If this
-         *              model is not given, all values are `null`.
-         */
-        constructor(
-          model: {{classname}} = {
-          {{#vars}}
-            {{name}}: null,
-          {{/vars}}
-          }
-        ) {
-            super(model, {{classname}}.ModelValidators);
-        }
+    export function formGenerator(
+          mod: {{classname}}
+        ): FormGroupTyped<{{classname}}> {
+	        var model: {{classname}} = {
+	          {{#vars}}
+	            {{name}}: null,
+	          {{/vars}}
+	        }
+            if(mod != null) {
+                model = mod;
+            }
+            return new FormGroup({
+	          {{#vars}}
+	          	{{#isPrimitiveType}}{{name}}: new FormControl(model.{{ name }}),{{/isPrimitiveType}}{{^isPrimitiveType}}{{#isListContainer}}{{name}}: new FormArray(model.{{ name }} ? model.{{name}}.map(x => {{complexType}}.formGenerator(x)) : []),{{/isListContainer}}{{^isListContainer}}{{#isEnum}}{{name}}: new FormControl(model.{{ name }}),{{/isEnum}}{{^isEnum}}{{name}}: {{dataType}}.formGenerator(model.{{ name }}),{{/isEnum}}{{/isListContainer}}{{/isPrimitiveType}}
+	          {{/vars}}
+            }) as FormGroupTyped<{{classname}}>;
     }
+

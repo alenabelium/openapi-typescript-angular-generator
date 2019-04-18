@@ -13,7 +13,9 @@ const { resolve } = require('path');
 const url = require('url');
 
 const openApiVersion = '3.3.4';
-const jarFileName = `openapi-generator-cli-${openApiVersion}.jar`;
+// const jarFileName = `openapi-generator-cli-${openApiVersion}.jar`;
+// custom version with referenced bug enum fixed from version v3.3.4
+const jarFileName = `openapi-generator-cli.jar`;
 const dockerImageName = `openapitools/openapi-generator-cli:v${openApiVersion}`;
 
 /**
@@ -115,15 +117,15 @@ const args = [
   `-o ${isDocker ? `/local/${argv.o}` : argv.o}`,
   '-g=typescript-angular',
   `-t=${
-    isDocker
-      ? '/local/node_modules/openapi-typescript-angular-generator/src/mustache'
-      : resolve(__dirname, '../src/mustache')
+  isDocker
+    ? '/local/node_modules/openapi-typescript-angular-generator/src/mustache'
+    : resolve(__dirname, '../src/mustache')
   }`,
 ];
 
 // enable post processing if environment variable TS_POST_PROCESS_FILE is set
 if (process.env.TS_POST_PROCESS_FILE) {
-  args.push('--enable-post-process-file',)
+  args.push('--enable-post-process-file')
 }
 
 // add auth headers
