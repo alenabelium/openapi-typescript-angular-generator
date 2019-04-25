@@ -52,3 +52,25 @@
             }) as FormGroupTyped<{{classname}}>;
     }
 
+    export function formAssign(formGroup: FormGroupTyped<{{classname}}>, el: {{classname}}) {
+      {{#vars}}
+	      {{#isPrimitiveType}}
+                formGroup.controls['{{name}}'].setValue(el.{{name}});
+        {{/isPrimitiveType}}
+        {{^isPrimitiveType}}
+                {{#isListContainer}}
+                while((formGroup.controls['{{name}}'] as FormArray).length > 0) (formGroup.controls['{{name}}'] as FormArray).removeAt(0);
+                for(let i of el.{{name}}) (formGroup.controls['{{name}}'] as FormArray).push({{complexType}}.formGenerator(i));
+                {{/isListContainer}}
+                {{^isListContainer}}
+        {{#isEnum}}formGroup.controls['{{name}}'].setValue(el.{{name}});
+        {{/isEnum}}
+        {{^isEnum}}{{dataType}}.formAssign(formGroup.controls['{{name}}'] as FormGroupTyped<{{dataType}}>, el.{{name}});
+        {{/isEnum}}
+                {{/isListContainer}}
+        {{/isPrimitiveType}}
+      {{/vars}}
+
+    }
+
+
