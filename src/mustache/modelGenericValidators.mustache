@@ -4,6 +4,7 @@
 {{! Copyright(c) 1995 - 2018 T-Systems Multimedia Solutions GmbH }}
 {{! Riesaer Str. 5, 01129 Dresden }}
 {{! All rights reserved. }}
+    {{^discriminator}}
     /**
     * A map of tuples with error name and `ValidatorFn` for each property of {{classname}}.
     */
@@ -33,26 +34,50 @@
         ],
     {{/vars}}
     };
-
+    {{/discriminator}}
     export function formGenerator(
           mod: {{classname}}
         ): FormGroupTyped<{{classname}}> {
+            {{^discriminator}}
 	        var model: {{classname}} = {
 	          {{#vars}}
 	            {{name}}: null,
 	          {{/vars}}
 	        }
+            {{/discriminator}}
+            {{#discriminator}}
+            var model: {{classname}};
+            {{/discriminator}}
             if(mod != null) {
                 model = mod;
             }
+            {{^discriminator}}
             return new FormGroup({
 	          {{#vars}}
 	          	{{#isPrimitiveType}}{{name}}: new FormControl(model.{{ name }}),{{/isPrimitiveType}}{{^isPrimitiveType}}{{#isListContainer}}{{name}}: new FormArray(model.{{ name }} ? model.{{name}}.map(x => {{complexType}}.formGenerator(x)) : []),{{/isListContainer}}{{^isListContainer}}{{#isEnum}}{{name}}: new FormControl(model.{{ name }}),{{/isEnum}}{{^isEnum}}{{name}}: {{dataType}}.formGenerator(model.{{ name }}),{{/isEnum}}{{/isListContainer}}{{/isPrimitiveType}}
 	          {{/vars}}
             }) as FormGroupTyped<{{classname}}>;
+            {{/discriminator}}
+            {{#discriminator}}
+            {{#mappedModels}}
+            if(model.{{discriminatorName}} == '{{mappingName}}') {
+                return {{modelName}}.formGenerator(model);
+            }
+            {{/mappedModels}}
+            throw Error();
+            {{/discriminator}}
     }
 
     export function formAssign(formGroup: FormGroupTyped<{{classname}}>, el: {{classname}}) {
+      {{#discriminator}}
+        let val = formGroup.controls['{{discriminatorName}}'].value
+        {{#mappedModels}}
+        if (val == '{{mappingName}}') {
+            {{modelName}}.formAssign(formGroup as FormGroupTyped<{{modelName}}>, el as {{modelName}});
+        }
+        {{/mappedModels}}
+      {{/discriminator}}
+      {{^discriminator}}
       {{#vars}}
 	      {{#isPrimitiveType}}
                 formGroup.controls['{{name}}'].setValue(el.{{name}});
@@ -70,7 +95,67 @@
                 {{/isListContainer}}
         {{/isPrimitiveType}}
       {{/vars}}
+      {{/discriminator}}
 
     }
 
+    export function emptyObject(): {{classname}} {
+        {{^discriminator}}
+        return ({
+	          {{#vars}}
+	            {{name}}: null,
+	          {{/vars}}
+        })
+        {{/discriminator}}
+        {{#discriminator}}
+        return ({
+	          {{#allVars}}
+	            {{name}}: null,
+	          {{/allVars}}
+        })
+        {{/discriminator}}
+    }
+
+    export function construct(el: any): {{classname}} {
+
+        let obj = {} as {{classname}};
+        {{#vars}}
+            {{#isPrimitiveType}}
+        obj.{{name}} = el.{{name}};
+            {{/isPrimitiveType}}
+            {{^isPrimitiveType}}
+                    {{#isListContainer}}
+        if(el.{{name}}) {
+            if(['number', 'string', 'boolean'].indexOf('{{complexType}}')) {
+                obj.{{name}} = [...el.{{name}}]
+            } else {
+                obj.{{name}} = el.{{name}}.map((x)  => {{complexType}}.construct(x));
+            }
+        } else {
+            obj.{{name}} = []
+        }
+                    {{/isListContainer}}
+                    {{^isListContainer}}
+            {{#isEnum}}
+        {{name}}: el.{{name}};
+            {{/isEnum}}
+            {{^isEnum}}
+        obj.{{name}} = {{dataType}}.construct(el.{{name}});
+            {{/isEnum}}
+                    {{/isListContainer}}
+            {{/isPrimitiveType}}
+        {{/vars}}
+        return obj;
+    }
+
+    {{#discriminator}}
+    export function getTheRightType(el: {{classname}}FULL): {{classname}} {
+        let val = el.{{discriminatorName}};
+        {{#mappedModels}}
+        if (val == '{{mappingName}}') {
+            return {{modelName}}.construct(el);
+        }
+        {{/mappedModels}}
+    }
+    {{/discriminator}}
 

@@ -1,6 +1,22 @@
 {{! Copyright(c) 1995 - 2018 T-Systems Multimedia Solutions GmbH }}
 {{! Riesaer Str. 5, 01129 Dresden }}
 {{! All rights reserved. }}
+{{#discriminatorName}}
+export type {{classname}} = {{#interfaces}}{{.}}{{^-last}} | {{/-last}}{{/interfaces}};
+
+export interface {{classname}}FULL {{#parent}}extends {{{parent}}} {{/parent}}{ {{>modelGenericAdditionalProperties}}
+{{#allVars}}
+    {{#description}}
+    /**
+     * {{{description}}}
+     */
+    {{/description}}
+    {{#isReadOnly}}readonly {{/isReadOnly}}{{{name}}}{{^-first}}?: {{{dataType}}}{{/-first}}{{#-first}}: {{classname}}.DiscriminatorEnum{{/-first}} ;
+{{/allVars}}
+}
+
+{{/discriminatorName}}
+{{^discriminatorName}}
 export interface {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{ {{>modelGenericAdditionalProperties}}
 {{#vars}}
     {{#description}}
@@ -11,5 +27,6 @@ export interface {{classname}} {{#parent}}extends {{{parent}}} {{/parent}}{ {{>m
     {{#isReadOnly}}readonly {{/isReadOnly}}{{{name}}}{{^required}}?{{/required}}: {{#isEnum}}{{{datatypeWithEnum}}}{{/isEnum}}{{^isEnum}}{{{dataType}}}{{/isEnum}};
 {{/vars}}
 }
+{{/discriminatorName}}
 
 {{>modelGenericEnums}}
