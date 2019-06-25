@@ -37,7 +37,7 @@
     {{/discriminator}}
     export function formGenerator(
           mod: {{classname}}, validators: Array<ValidatorFn> = []
-        ): FormGroupTyped<{{classname}}> {
+        ): FormGroupTyped<{{classname}}> | FormControl {
             {{^discriminator}}
 	        var model: {{classname}} = {
 	          {{#vars}}
@@ -50,6 +50,8 @@
             {{/discriminator}}
             if(mod != null) {
                 model = mod;
+            } else {
+                return new FormControl(null, validators);
             }
             {{^discriminator}}
             return new FormGroup({
