@@ -1,6 +1,6 @@
 {
   "name": "openapi-typescript-angular-generator",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "description": "Code generator to generate angular-specific typescript (model/service/validator) from an openapi-specification.",
   "repository": {
     "type": "git",
@@ -32,7 +32,8 @@
   ],
   "contributors": [
     "André Jähnig",
-    "Stefan Schubert"
+    "Stefan Schubert",
+    "Alen Abelium"
   ],
   "license": "Apache-2.0",
   "peerDependencies": {
