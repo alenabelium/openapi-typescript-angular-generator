@@ -122,6 +122,7 @@
 
         let obj = {} as {{classname}};
         {{#vars}}
+          {{^isReadOnly}}
             {{#isPrimitiveType}}
         obj.{{name}} = el.{{name}};
             {{/isPrimitiveType}}
@@ -146,6 +147,7 @@
             {{/isEnum}}
                     {{/isListContainer}}
             {{/isPrimitiveType}}
+          {{/isReadOnly}}
         {{/vars}}
         return obj;
     }
