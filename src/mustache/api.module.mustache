@@ -6,19 +6,11 @@ import { Configuration } from './configuration';
 {{#useHttpClient}}import { HttpClient } from '@angular/common/http';{{/useHttpClient}}
 {{^useHttpClient}}import { Http } from '@angular/http';{{/useHttpClient}}
 
-{{#apiInfo}}
-{{#apis}}
-import { {{classname}} } from './{{importPath}}';
-{{/apis}}
-{{/apiInfo}}
-
 @NgModule({
   imports:      [],
   declarations: [],
   exports:      [],
-  providers: [
-    {{#apiInfo}}{{#apis}}{{classname}}{{#hasMore}},
-    {{/hasMore}}{{/apis}}{{/apiInfo}} ]
+  providers:    []
 })
 export class ApiModule {
     public static forRoot(configurationFactory: (...args: any[]) => Configuration, deps?: any[]): ModuleWithProviders {
