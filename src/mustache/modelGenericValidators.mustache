@@ -94,7 +94,7 @@
                 {{/isEnum}}
                 {{^isEnum}}
                 if(formGroup.controls['{{name}}'].value == null) {
-                    formGroup.setControl('{{name}}', {{dataType}}.formGenerator(el.vrstaSeznama))
+                    formGroup.setControl('{{name}}', {{dataType}}.formGenerator(el.{{name}}))
                 } else {
                     {{dataType}}.formAssign(formGroup.controls['{{name}}'] as FormGroupTyped<{{dataType}}>, el.{{name}});
                 }
