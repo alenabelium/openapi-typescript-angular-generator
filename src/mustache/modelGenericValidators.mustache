@@ -90,9 +90,8 @@
                 for(let i of el.{{name}}) (formGroup.controls.{{name}} as FormArray).push({{complexType}}.formGenerator(i));
                 {{/isListContainer}}
                 {{^isListContainer}}
-                {{#isEnum}}formGroup.controls.{{name}}.setValue(el.{{name}});
-                {{/isEnum}}
-                {{^isEnum}}if(formGroup.controls.{{name}}.value == null || e.{{name}} == null) {
+                {{#isEnum}}formGroup.controls.{{name}}.setValue(el.{{name}});{{/isEnum}}{{^isEnum}}
+                if(formGroup.controls.{{name}}.value == null || el.{{name}} == null) {
                     formGroup.setControl('{{name}}', {{dataType}}.formGenerator(el.{{name}}))
                 } else {
                     {{dataType}}.formAssign(formGroup.controls.{{name}} as FormGroupTyped<{{dataType}}>, el.{{name}});
