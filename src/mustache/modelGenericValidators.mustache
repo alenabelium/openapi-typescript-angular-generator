@@ -56,7 +56,7 @@
             {{^discriminator}}
             return new FormGroup({
 	          {{#vars}}
-	          	{{#isPrimitiveType}}{{name}}: new FormControl(model.{{ name }}, {{classname}}.ModelValidators.{{name}}.map(x => x[1])),{{/isPrimitiveType}}{{^isPrimitiveType}}{{#isListContainer}}{{name}}: new FormArray(model.{{ name }} ? model.{{name}}.map(x => {{complexType}}.formGenerator(x)) : []),{{/isListContainer}}{{^isListContainer}}{{#isEnum}}{{name}}: new FormControl(model.{{ name }}, {{classname}}.ModelValidators.{{name}}.map(x => x[1])),{{/isEnum}}{{^isEnum}}{{name}}: {{dataType}}.formGenerator(model.{{ name }}, {{classname}}.ModelValidators.{{name}}.map(x => x[1])),{{/isEnum}}{{/isListContainer}}{{/isPrimitiveType}}
+              {{#isPrimitiveType}}{{name}}: new FormControl(model.{{ name }}),{{/isPrimitiveType}}{{^isPrimitiveType}}{{#isListContainer}}{{name}}: new FormArray(model.{{ name }} ? model.{{name}}.map(x => {{complexType}}.formGenerator(x)) : []),{{/isListContainer}}{{^isListContainer}}{{#isEnum}}{{name}}: new FormControl(model.{{ name }}),{{/isEnum}}{{^isEnum}}{{name}}: {{dataType}}.formGenerator(model.{{ name }}),{{/isEnum}}{{/isListContainer}}{{/isPrimitiveType}}
 	          {{/vars}}
             }, validators) as FormGroupTyped<{{classname}}>;
             {{/discriminator}}
