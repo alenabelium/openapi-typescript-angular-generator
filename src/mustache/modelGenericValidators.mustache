@@ -167,3 +167,63 @@
     }
     {{/discriminator}}
 
+    export function formMetadata() {
+        return  {
+            metadata: formMetadata,
+            classname: '{{classname}}',
+            discriminator: '{{discriminator}}',
+            discriminatorName: '{{discriminatorName}}',
+            mappedModels: '{{mappedModels}}',
+            mappingName: '{{mappingName}}',
+            modelName: '{{modelName}}',
+            vars: [
+                {{#vars}}
+                {
+                    {{^isPrimitiveType}}
+                    {{#complexType}}
+                    metadata: {{complexType}}.formMetadata,
+                    {{/complexType}}
+                    {{/isPrimitiveType}}
+                    isReadOnly: {{isReadOnly}},
+                    isEnum: {{isEnum}},
+                    {{#isEnum}}
+                    datatypeWithEnum: {{datatypeWithEnum}},
+                    {{/isEnum}}
+                    required: {{required}},
+                    name: '{{name}}',
+                    classname: '{{classname}}',
+                    dataType: '{{dataType}}',
+                    isPrimitiveType: {{isPrimitiveType}},
+                    isListContainer: {{isListContainer}},
+                    complexType: '{{complexType}}'
+                },
+                {{/vars}}
+            ],
+            validators: {
+                {{#vars}}
+                {{name}}: [
+                        {{#required}}
+                        ['required'],
+                        {{/required}}
+                        {{#hasValidation}}
+                        {{#minimum}}
+                        ['min', {{minimum}}],
+                        {{/minimum}}
+                        {{#maximum}}
+                        ['max', {{maximum}}],
+                        {{/maximum}}
+                        {{#minLength}}
+                        ['minlength', {{minLength}}],
+                        {{/minLength}}
+                        {{#maxLength}}
+                        ['maxlength', {{maxLength}}],
+                        {{/maxLength}}
+                        {{#pattern}}
+                        ['pattern', '{{pattern}}'],
+                        {{/pattern}}
+                        {{/hasValidation}}
+                ],
+                {{/vars}}
+            }
+        }
+    }
