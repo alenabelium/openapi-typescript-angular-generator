@@ -70,9 +70,10 @@ export class {{classname}} {
 
         if (configuration) {
             this.configuration = configuration;
-            this.configuration.basePath = configuration.basePath != null ? configuration.basePath : (basePath != null ? basePath : this.basePath);
+            this.configuration.basePath = configuration.basePath || basePath || this.basePath;
+
         } else {
-            this.configuration.basePath = basePath != null ? basePath : this.basePath;
+            this.configuration.basePath = basePath || this.basePath;
         }
     }
 
