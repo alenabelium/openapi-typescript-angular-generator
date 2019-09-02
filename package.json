@@ -6,12 +6,7 @@
     "type": "git",
     "url": "https://github.com/T-Systems-MMS/openapi-typescript-angular-generator.git"
   },
-  "scripts": {
-    "build": "rollup -c",
-    "test": "jest --config jest.config.js",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test"
-  },
+  "scripts": {},
   "files": [
     "dist",
     "src/mustache",
@@ -36,21 +31,6 @@
     "Alen Abelium"
   ],
   "license": "Apache-2.0",
-  "peerDependencies": {
-    "@angular/forms": ">=7.0.0 <8.0.0"
-  },
-  "devDependencies": {
-    "@angular/common": "^7.0.0",
-    "@angular/core": "^7.0.0",
-    "@angular/forms": "^7.0.0",
-    "@angular/platform-browser": "^7.0.0",
-    "@types/jest": "^23.3.14",
-    "jest": "^23.6.0",
-    "rollup": "^1.1.2",
-    "rollup-plugin-typescript2": "^0.19.2",
-    "rxjs": "~6.3.3",
-    "ts-jest": "^23.10.5",
-    "typescript": "^3.3.3",
-    "zone.js": "^0.8.26"
-  }
+  "peerDependencies": {},
+  "devDependencies": {}
 }
