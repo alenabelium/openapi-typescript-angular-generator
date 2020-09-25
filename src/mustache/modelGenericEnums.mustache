@@ -5,19 +5,6 @@
  * Namespace for property- and property-value-enumerations of {{{classname}}}.
  */
 export namespace {{classname}} {
-    /**
-     * All properties of {{{classname}}}.
-     */
-    export enum Properties {
-    {{#vars}}
-        {{#description}}
-        /**
-         * {{{description}}}
-         */
-        {{/description}}
-        {{name}} = '{{name}}'{{^-last}},{{/-last}}
-    {{/vars}}
-    }
 {{#vars}}
     {{#isEnum}}
 
@@ -33,6 +20,4 @@ export namespace {{classname}} {
     }
     {{/isEnum}}
 {{/vars}}
-
-{{>modelGenericValidators}}
 }
