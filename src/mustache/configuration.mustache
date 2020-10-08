@@ -1,12 +1,10 @@
 {{! Copyright(c) 1995 - 2018 T-Systems Multimedia Solutions GmbH }}
 {{! Riesaer Str. 5, 01129 Dresden }}
 {{! All rights reserved. }}
-{{^useRxJS6}}
-import { Observable } from 'rxjs/Observable';
-{{/useRxJS6}}
-{{#useRxJS6}}
+import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-{{/useRxJS6}}
+import { catchError } from 'rxjs/operators';
+import { CustomHttpUrlEncodingCodec } from './encoder';
 
 export interface ConfigurationParameters {
     apiKeys?: {[ key: string ]: string};
@@ -44,7 +42,7 @@ export class Configuration {
      * @param contentTypes - the array of content types that are available for selection
      * @returns the selected content-type or <code>undefined</code> if no selection could be made.
      */
-    public selectHeaderContentType (contentTypes: string[]): string | undefined {
+    private selectHeaderContentType (contentTypes: string[]): string | undefined {
         if (contentTypes.length === 0) {
             return undefined;
         }
@@ -63,7 +61,7 @@ export class Configuration {
      * @param accepts - the array of content types that are available for selection.
      * @returns the selected content-type or <code>undefined</code> if no selection could be made.
      */
-    public selectHeaderAccept(accepts: string[]): string | undefined {
+    private selectHeaderAccept(accepts: string[]): string | undefined {
         if (accepts.length === 0) {
             return undefined;
         }
@@ -76,6 +74,88 @@ export class Configuration {
     }
 
     /**
+     * @param consumes string[] mime-types
+     * @return true: consumes contains 'multipart/form-data', false: otherwise
+     */
+    public canConsumeForm(consumes: string[]): boolean {
+        const form = 'multipart/form-data';
+        for (const consume of consumes) {
+            if (form === consume) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check all required parameters that they are non-null and non-undefined.
+     */
+    public checkRequired(nickname: string, parameters: { [key: string]: any }) {
+        for (const key of Object.keys(parameters)) {
+            if (parameters[key] == null) {
+                throw new Error(`Required parameter ${key} was null or undefined when calling ${nickname}.`);
+            }
+        }
+    }
+
+    /**
+     * Add standard Content-Type and Accept headers and optionally merge additional headers.
+     */
+    public mergeHeaders(headers: HttpHeaders, contentTypes: string[], accepts: string[], additionalHeaders: string[][]) {
+        // set Content-Type header
+        const httpContentTypeSelected: string | undefined = this.selectHeaderContentType(contentTypes);
+        if (httpContentTypeSelected !== undefined && httpContentTypeSelected.length > 0) {
+            headers = headers.set('Content-Type', httpContentTypeSelected);
+        }
+        // set Accept header
+        const httpHeaderAcceptSelected: string | undefined = this.selectHeaderAccept(accepts);
+        if (httpHeaderAcceptSelected !== undefined && httpHeaderAcceptSelected.length > 0) {
+            headers = headers.set('Accept', httpHeaderAcceptSelected);
+        }
+        // set additional headers
+        if (additionalHeaders) {
+            for (let pair of additionalHeaders) {
+                headers = headers.set(pair[0], pair[1]);
+            }
+        }
+    }
+
+    /**
+     * If errorHandler is non-null, pipe result error through error handler.
+     */
+    public handleErrors<T>(nickname: string): (o: Observable<T>) => Observable<T> {
+        return (observable: Observable<T>) => {
+            if (typeof this.errorHandler === 'function') {
+                return observable.pipe(catchError(err => this.errorHandler(err, nickname)));
+            } else {
+                return observable;
+            }
+        }
+    }
+
+    /**
+     * Build HttpParams structure for query parameters.
+     */
+    public buildQueryParams(parameters: Array<[string, any, ('multi' | 'collection')?, string?]>): HttpParams {
+        let queryParameters = new HttpParams({ encoder: new CustomHttpUrlEncodingCodec() });
+        for (const [name, value, type, collectionFormat] of parameters) {
+            if (value == null) continue;
+            if (type === 'multi') {
+                for (const element of value) {
+                    queryParameters = queryParameters.append(name, element);
+                }
+            } else if (type === 'collection') {
+                queryParameters = queryParameters.set(name, value.join(collectionFormat));
+            } else {
+                let valueFmt = value;
+                if (value instanceof Date) valueFmt = value.toISOString();
+                queryParameters = queryParameters.set(name, valueFmt);
+            }
+        }
+        return queryParameters;
+    }
+
+    /**
      * Check if the given MIME is a JSON MIME.
      * JSON MIME examples:
      *   application/json
@@ -85,7 +165,7 @@ export class Configuration {
      * @param mime - MIME (Multipurpose Internet Mail Extensions)
      * @return True if the given MIME is JSON, false otherwise.
      */
-    public isJsonMime(mime: string): boolean {
+    private isJsonMime(mime: string): boolean {
         const jsonMime: RegExp = new RegExp('^(application\/json|[^;/ \t]+\/[^;/ \t]+[+]json)[ \t]*(;.*)?$', 'i');
         return mime !== null && (jsonMime.test(mime) || mime.toLowerCase() === 'application/json-patch+json');
     }

@@ -5,17 +5,14 @@
 /* tslint:disable:no-unused-variable member-ordering */
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
-{{>apiParamValidatorImports}}
 import { HttpClient, HttpHeaders, HttpParams,
          HttpResponse, HttpEvent }                           from '@angular/common/http';
-import { CustomHttpUrlEncodingCodec }                        from '../encoder';
 
 {{^useRxJS6}}
 import { Observable }                                        from 'rxjs/Observable';
 {{/useRxJS6}}
 {{#useRxJS6}}
 import { Observable }                                        from 'rxjs';
-import { catchError }                                        from 'rxjs/operators';
 {{/useRxJS6}}
 
 {{#imports}}
@@ -65,20 +62,6 @@ export class {{classname}} {
         }
     }
 
-    /**
-     * @param consumes string[] mime-types
-     * @return true: consumes contains 'multipart/form-data', false: otherwise
-     */
-    private canConsumeForm(consumes: string[]): boolean {
-        const form = 'multipart/form-data';
-        for (const consume of consumes) {
-            if (form === consume) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 {{#operation}}
 {{>apiCallByPartialMap}}
 
@@ -93,43 +76,22 @@ export class {{classname}} {
     public {{nickname}}({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}, {{/allParams}}observe?: 'response', reportProgress?: boolean, additionalHeaders?: Array<Array<string>>): Observable<HttpResponse<{{#returnType}}{{{returnType}}}{{#isResponseTypeFile}}|undefined{{/isResponseTypeFile}}{{/returnType}}{{^returnType}}any{{/returnType}}>>;
     public {{nickname}}({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}, {{/allParams}}observe?: 'events', reportProgress?: boolean, additionalHeaders?: Array<Array<string>>): Observable<HttpEvent<{{#returnType}}{{{returnType}}}{{#isResponseTypeFile}}|undefined{{/isResponseTypeFile}}{{/returnType}}{{^returnType}}any{{/returnType}}>>;
     public {{nickname}}({{#allParams}}{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}, {{/allParams}}observe: any = 'body', reportProgress: boolean = false, additionalHeaders?: Array<Array<string>>): Observable<any> {
-{{#allParams}}
-{{#required}}
-        if ({{paramName}} === null || {{paramName}} === undefined) {
-            throw new Error('Required parameter {{paramName}} was null or undefined when calling {{nickname}}.');
-        }
-{{/required}}
-{{/allParams}}
+        {{#allParams}}
+        {{#required}}
+        this.configuration.checkRequired('{{nickname}}', { {{paramName}} });
+        {{/required}}
+        {{/allParams}}
 
 {{#hasQueryParams}}
-        let queryParameters = new HttpParams({encoder: new CustomHttpUrlEncodingCodec()});
-{{#queryParams}}
-        {{#isListContainer}}
-        if ({{paramName}}) {
-        {{#isCollectionFormatMulti}}
-            {{paramName}}.forEach((element) => {
-                queryParameters = queryParameters.append('{{baseName}}', <any>element);
-            })
-        {{/isCollectionFormatMulti}}
-        {{^isCollectionFormatMulti}}
-            queryParameters = queryParameters.set('{{baseName}}', {{paramName}}.join(COLLECTION_FORMATS['{{collectionFormat}}']));
-        {{/isCollectionFormatMulti}}
-        }
-        {{/isListContainer}}
-        {{^isListContainer}}
-        if ({{paramName}} !== undefined && {{paramName}} !== null) {
-        {{#isDateTime}}
-            queryParameters = queryParameters.set('{{baseName}}', <any>{{paramName}}.toISOString());
-        {{/isDateTime}}
-        {{^isDateTime}}
-            queryParameters = queryParameters.set('{{baseName}}', <any>{{paramName}});
-        {{/isDateTime}}
-        }
-        {{/isListContainer}}
-{{/queryParams}}
+        let queryParameters = this.configuration.buildQueryParams([
+            {{#queryParams}}
+            ['{{baseName}}', {{paramName}}{{#isListContainer}}, {{#isCollectionFormatMulti}}'multi'{{/isCollectionFormatMulti}}{{^isCollectionFormatMulti}}'collection', COLLECTION_FORMATS['{{collectionFormat}}']{{/isCollectionFormatMulti}}{{/isListContainer}}],
+            {{/queryParams}}
+        ]);
 
 {{/hasQueryParams}}
         let headers = this.defaultHeaders;
+
 {{#headerParams}}
         {{#isListContainer}}
         if ({{paramName}}) {
@@ -142,7 +104,6 @@ export class {{classname}} {
         }
         {{/isListContainer}}
 {{/headerParams}}
-
 {{#authMethods}}
         // authentication ({{name}}) required
 {{#isApiKey}}
@@ -175,32 +136,16 @@ export class {{classname}} {
 
 {{/isOAuth}}
 {{/authMethods}}
-        // to determine the Accept header
-        let httpHeaderAccepts: string[] = [
-            {{#produces}}
-            '{{{mediaType}}}'{{#hasMore}},{{/hasMore}}
-            {{/produces}}
-        ];
-        const httpHeaderAcceptSelected: string | undefined = this.configuration.selectHeaderAccept(httpHeaderAccepts);
-        if (httpHeaderAcceptSelected !== undefined) {
-            headers = headers.set('Accept', httpHeaderAcceptSelected);
-        }
-
-        // to determine the Content-Type header
-        const consumes: string[] = [
-            {{#consumes}}
-            '{{{mediaType}}}'{{#hasMore}},{{/hasMore}}
-            {{/consumes}}
-        ];
+        const produces: string[] = [{{#produces}}'{{{mediaType}}}'{{#hasMore}}, {{/hasMore}}{{/produces}}];
 {{#bodyParam}}
-        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
-        if (httpContentTypeSelected !== undefined) {
-            headers = headers.set('Content-Type', httpContentTypeSelected);
-        }
+        const consumes: string[] = [{{#consumes}}'{{{mediaType}}}'{{#hasMore}}, {{/hasMore}}{{/consumes}}];
 {{/bodyParam}}
 
 {{#hasFormParams}}
-        const canConsumeForm = this.canConsumeForm(consumes);
+{{^bodyParam}}
+        const consumes: string[] = [{{#consumes}}'{{{mediaType}}}'{{#hasMore}}, {{/hasMore}}{{/consumes}}];
+{{/bodyParam}}
+        const canConsumeForm = this.configuration.canConsumeForm(consumes);
 
         let formParams: { append(param: string, value: any): any; };
         let useForm = false;
@@ -239,13 +184,9 @@ export class {{classname}} {
 {{/formParams}}
 
 {{/hasFormParams}}
-            if (additionalHeaders) {
-                for(let pair of additionalHeaders) {
-                    headers = headers.set(pair[0], pair[1]);
-                }
-            }
+        this.configuration.mergeHeaders(headers, {{#bodyParam}}consumes{{/bodyParam}}{{^bodyParam}}[]{{/bodyParam}}, produces, additionalHeaders);
 
-        const handle = this.httpClient.{{httpMethod}}{{^isResponseFile}}<{{#returnType}}{{{returnType}}}{{#isResponseTypeFile}}|undefined{{/isResponseTypeFile}}{{/returnType}}{{^returnType}}any{{/returnType}}>{{/isResponseFile}}(`${this.configuration.basePath}{{{path}}}`,{{#isBodyAllowed}}
+        return this.httpClient.{{httpMethod}}{{^isResponseFile}}<{{#returnType}}{{{returnType}}}{{#isResponseTypeFile}}|undefined{{/isResponseTypeFile}}{{/returnType}}{{^returnType}}any{{/returnType}}>{{/isResponseFile}}(`${this.configuration.basePath}{{{path}}}`,{{#isBodyAllowed}}
             {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}{{#hasFormParams}}convertFormParamsToString ? formParams.toString() : formParams{{/hasFormParams}}{{^hasFormParams}}null{{/hasFormParams}}{{/bodyParam}},{{/isBodyAllowed}}
             {
 {{#hasQueryParams}}
@@ -259,11 +200,9 @@ export class {{classname}} {
                 observe: observe,
                 reportProgress: reportProgress
             }
+        ).pipe(
+            this.configuration.handleErrors('{{operationIdOriginal}}')
         );
-        if(typeof this.configuration.errorHandler === 'function') {
-          return handle.pipe(catchError(err => this.configuration.errorHandler(err, '{{operationIdOriginal}}')));
-        }
-        return handle;
     }
 
 {{/operation}}}
