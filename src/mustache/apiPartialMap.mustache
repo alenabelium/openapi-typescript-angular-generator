@@ -11,12 +11,12 @@ export namespace {{operationIdCamelCase}} {
      */
     export interface PartialParamMap {
     {{#allParams}}
-      {{#description}}
-      /**
-       * {{{description}}}
-       */
-      {{/description}}
-      {{paramName}}{{^required}}?{{/required}}: {{{dataType}}};
+        {{#description}}
+        /**
+        * {{{description}}}
+        */
+        {{/description}}
+        {{paramName}}{{^required}}?{{/required}}: {{{dataType}}};
     {{/allParams}}
     }
 
