@@ -333,7 +333,10 @@ export class {{classname}} {
             }
         );
         if(typeof this.configuration.errorHandler === 'function') {
-          return handle.pipe(catchError(err => this.configuration.errorHandler(err, '{{operationIdOriginal}}')));
+          let errorHandler = this.configuration.errorHandler
+          if(errorHandler) {   // some Typescript 'strict' shit
+            return handle.pipe(catchError(err => errorHandler(err, '{{operationIdOriginal}}')));
+          }
         }
         return handle;
 {{/useHttpClient}}
