@@ -184,7 +184,7 @@ export class {{classname}} {
 {{/formParams}}
 
 {{/hasFormParams}}
-        this.configuration.mergeHeaders(headers, {{#bodyParam}}consumes{{/bodyParam}}{{^bodyParam}}[]{{/bodyParam}}, produces, additionalHeaders);
+        headers = this.configuration.mergeHeaders(headers, {{#bodyParam}}consumes{{/bodyParam}}{{^bodyParam}}[]{{/bodyParam}}, produces, additionalHeaders);
 
         return this.httpClient.{{httpMethod}}{{^isResponseFile}}<{{#returnType}}{{{returnType}}}{{#isResponseTypeFile}}|undefined{{/isResponseTypeFile}}{{/returnType}}{{^returnType}}any{{/returnType}}>{{/isResponseFile}}(`${this.configuration.basePath}{{{path}}}`,{{#isBodyAllowed}}
             {{#bodyParam}}{{paramName}}{{/bodyParam}}{{^bodyParam}}{{#hasFormParams}}convertFormParamsToString ? formParams.toString() : formParams{{/hasFormParams}}{{^hasFormParams}}null{{/hasFormParams}}{{/bodyParam}},{{/isBodyAllowed}}

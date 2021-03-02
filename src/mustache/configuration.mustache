@@ -101,7 +101,7 @@ export class Configuration {
     /**
      * Add standard Content-Type and Accept headers and optionally merge additional headers.
      */
-    public mergeHeaders(headers: HttpHeaders, contentTypes: string[], accepts: string[], additionalHeaders: string[][]) {
+    public mergeHeaders(headers: HttpHeaders, contentTypes: string[], accepts: string[], additionalHeaders: string[][]): HttpHeaders {
         // set Content-Type header
         const httpContentTypeSelected: string | undefined = this.selectHeaderContentType(contentTypes);
         if (httpContentTypeSelected !== undefined && httpContentTypeSelected.length > 0) {
@@ -118,6 +118,7 @@ export class Configuration {
                 headers = headers.set(pair[0], pair[1]);
             }
         }
+        return headers;
     }
 
     /**
